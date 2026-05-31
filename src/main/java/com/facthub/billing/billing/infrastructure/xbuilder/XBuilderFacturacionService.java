@@ -11,8 +11,19 @@ import io.github.project.openubl.xbuilder.enricher.ContentEnricher;
 import io.github.project.openubl.xbuilder.enricher.config.DateProvider;
 import io.github.project.openubl.xbuilder.enricher.config.Defaults;
 import io.github.project.openubl.xbuilder.renderer.TemplateProducer;
+import io.github.project.openubl.xbuilder.signature.CertificateDetails;
+import io.github.project.openubl.xbuilder.signature.CertificateDetailsFactory;
+import io.github.project.openubl.xbuilder.signature.XMLSigner;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.w3c.dom.Document;
 
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.InputStream;
+import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -78,7 +89,20 @@ public class XBuilderFacturacionService {
         enricher.enrich(input);
 
         // 6. Render Raw XML
-        return TemplateProducer.getInstance().getInvoice().data(input).render();
+        String xmlCrudo = TemplateProducer.getInstance().getInvoice().data(input).render();
+
+        // 7. Cargar certificado y FIRMAR el XML
+        InputStream ksInputStream = new ClassPathResource("certificado-prueba.pfx").getInputStream();
+        CertificateDetails certificate = CertificateDetailsFactory.create(ksInputStream, "miclave");
+
+        Document signedXML = XMLSigner.signXML(xmlCrudo, "MiEmpresa", certificate.getX509Certificate(), certificate.getPrivateKey());
+
+        // 8. Convertir el XML Firmado a String
+        Transformer transformer = TransformerFactory.newInstance().newTransformer();
+        StringWriter writer = new StringWriter();
+        transformer.transform(new DOMSource(signedXML), new StreamResult(writer));
+
+        return writer.toString();
     }
 
 }
