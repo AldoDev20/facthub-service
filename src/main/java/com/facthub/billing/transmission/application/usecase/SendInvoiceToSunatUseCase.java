@@ -21,7 +21,7 @@ public class SendInvoiceToSunatUseCase {
      */
     public SunatTicket execute(String xmlFirmado) {
         try {
-            Object response = sunatService.enviarFactura(xmlFirmado);
+            sunatService.enviarFactura(xmlFirmado);
 
             return SunatTicket.builder()
                     .status("PENDING_IMPLEMENTATION")

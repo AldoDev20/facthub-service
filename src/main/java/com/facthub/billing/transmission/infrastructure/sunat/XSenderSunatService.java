@@ -16,7 +16,7 @@ public class XSenderSunatService {
      * @return response from SUNAT (placeholder for now)
      */
     public Object enviarFactura(String xmlFirmado) {
-        // TODO: Implement actual XSender integration
+        // Pending: Implement actual XSender integration
         // This requires correct package imports from spring-boot-xsender runtime
         return null;
     }
