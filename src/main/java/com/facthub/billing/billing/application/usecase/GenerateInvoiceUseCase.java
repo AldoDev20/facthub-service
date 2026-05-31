@@ -49,20 +49,36 @@ public class GenerateInvoiceUseCase {
      */
     @Transactional
     public Invoice execute(FacturaRequestDto request) {
-        // 1. Validate taxpayer
-        Taxpayer taxpayer = getTaxpayerInfoUseCase.execute(request.getRucCliente());
+        // 1. Determine Document Type and Series
+        boolean isFactura = "FACTURA".equalsIgnoreCase(request.getTipoComprobante());
+        String serie = isFactura ? "F001" : "B001";
+        String documentType = isFactura ? "01" : "03";
 
-        // 2. Validate Issuer Company
+        // 2. Validate taxpayer
+        Taxpayer taxpayer;
+        if (isFactura) {
+            taxpayer = getTaxpayerInfoUseCase.execute(request.getNumeroDocumentoCliente());
+        } else {
+            // For Boleta, we don't query Searchpe, we just use the provided data
+            if (request.getNombreCliente() == null || request.getNombreCliente().trim().isEmpty()) {
+                throw new RuntimeException("El nombreCliente es obligatorio para emitir Boletas.");
+            }
+            taxpayer = new Taxpayer();
+            taxpayer.setRuc(request.getNumeroDocumentoCliente());
+            taxpayer.setNombre(request.getNombreCliente());
+        }
+
+        // 3. Validate Issuer Company
         com.facthub.billing.company.domain.model.Company company = getCompanyByRucUseCase.execute(request.getRucEmisor());
 
-        // 3. Generate sequence number
-        int numeroFactura = obtenerSiguienteNumero("F001");
+        // 4. Generate sequence number
+        int numeroFactura = obtenerSiguienteNumero(serie);
 
-        // 4. Create invoice record in PENDING state
+        // 5. Create invoice record in PENDING state
         Invoice invoice = Invoice.builder()
-                .documentType("01") // 01 = Factura
+                .documentType(documentType)
                 .issuerRuc(company.getRuc())
-                .series("F001")
+                .series(serie)
                 .number(numeroFactura)
                 .customerRuc(taxpayer.getRuc())
                 .customerName(taxpayer.getNombre())
