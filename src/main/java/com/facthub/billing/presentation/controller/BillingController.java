@@ -1,6 +1,6 @@
 package com.facthub.billing.presentation.controller;
 
-import com.facthub.billing.billing.application.dto.FacturaRequestDto;
+import com.facthub.billing.billing.application.dto.InvoiceRequestDto;
 import com.facthub.billing.billing.application.usecase.GenerateInvoiceUseCase;
 import com.facthub.billing.billing.domain.model.Invoice;
 import jakarta.validation.Valid;
@@ -16,12 +16,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/factura")
-public class FacturacionController {
+@RequestMapping("/api/invoices")
+public class BillingController {
 
     private final GenerateInvoiceUseCase generateInvoiceUseCase;
 
-    public FacturacionController(GenerateInvoiceUseCase generateInvoiceUseCase) {
+    public BillingController(GenerateInvoiceUseCase generateInvoiceUseCase) {
         this.generateInvoiceUseCase = generateInvoiceUseCase;
     }
 
@@ -31,8 +31,8 @@ public class FacturacionController {
      * @param request the invoice request DTO
      * @return response with invoice data and SUNAT status
      */
-    @PostMapping(value = "/emitir")
-    public ResponseEntity<Map<String, Object>> emitirFactura(@Valid @RequestBody FacturaRequestDto request) {
+    @PostMapping(value = "/issue")
+    public ResponseEntity<Map<String, Object>> issueInvoice(@Valid @RequestBody InvoiceRequestDto request) {
         Map<String, Object> response = new HashMap<>();
         try {
             // Execute the use case to generate, sign, and send invoice
@@ -40,14 +40,14 @@ public class FacturacionController {
 
             // Build response
             response.put("success", true);
-            response.put("message", "Factura emitida exitosamente");
+            response.put("message", "Invoice issued successfully");
 
             Map<String, Object> invoiceInfo = new HashMap<>();
             invoiceInfo.put("id", invoice.getId());
-            invoiceInfo.put("serie", invoice.getSeries());
-            invoiceInfo.put("numero", invoice.getNumber());
-            invoiceInfo.put("rucCliente", invoice.getCustomerRuc());
-            invoiceInfo.put("nombreCliente", invoice.getCustomerName());
+            invoiceInfo.put("series", invoice.getSeries());
+            invoiceInfo.put("number", invoice.getNumber());
+            invoiceInfo.put("customerDocumentNumber", invoice.getCustomerRuc());
+            invoiceInfo.put("customerName", invoice.getCustomerName());
             invoiceInfo.put("totalAmount", invoice.getTotalAmount());
             invoiceInfo.put("issueDate", invoice.getIssueDate());
 
@@ -63,7 +63,7 @@ public class FacturacionController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Error al emitir factura");
+            response.put("message", "Error issuing invoice");
             response.put("error", e.getMessage());
             return ResponseEntity.internalServerError().body(response);
         }

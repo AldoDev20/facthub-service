@@ -1,11 +1,11 @@
 package com.facthub.billing.billing.application.usecase;
 
-import com.facthub.billing.billing.application.dto.FacturaRequestDto;
+import com.facthub.billing.billing.application.dto.InvoiceRequestDto;
 import com.facthub.billing.billing.domain.model.Invoice;
 import com.facthub.billing.billing.domain.model.InvoiceSequence;
 import com.facthub.billing.billing.domain.repository.InvoiceRepository;
 import com.facthub.billing.billing.domain.repository.InvoiceSequenceRepository;
-import com.facthub.billing.billing.infrastructure.xbuilder.XBuilderFacturacionService;
+import com.facthub.billing.billing.infrastructure.xbuilder.XBuilderBillingService;
 import com.facthub.billing.directory.domain.model.Taxpayer;
 import com.facthub.billing.directory.application.usecase.GetTaxpayerInfoUseCase;
 import com.facthub.billing.transmission.application.usecase.SendInvoiceToSunatUseCase;
@@ -21,7 +21,7 @@ public class GenerateInvoiceUseCase {
 
     private final GetTaxpayerInfoUseCase getTaxpayerInfoUseCase;
     private final com.facthub.billing.company.application.usecase.GetCompanyByRucUseCase getCompanyByRucUseCase;
-    private final XBuilderFacturacionService xBuilderService;
+    private final XBuilderBillingService xBuilderService;
     private final SendInvoiceToSunatUseCase sendToSunatUseCase;
     private final InvoiceRepository invoiceRepository;
     private final InvoiceSequenceRepository sequenceRepository;
@@ -29,7 +29,7 @@ public class GenerateInvoiceUseCase {
     public GenerateInvoiceUseCase(
             GetTaxpayerInfoUseCase getTaxpayerInfoUseCase,
             com.facthub.billing.company.application.usecase.GetCompanyByRucUseCase getCompanyByRucUseCase,
-            XBuilderFacturacionService xBuilderService,
+            XBuilderBillingService xBuilderService,
             SendInvoiceToSunatUseCase sendToSunatUseCase,
             InvoiceRepository invoiceRepository,
             InvoiceSequenceRepository sequenceRepository) {
@@ -48,38 +48,38 @@ public class GenerateInvoiceUseCase {
      * @return the created Invoice entity with SUNAT status
      */
     @Transactional
-    public Invoice execute(FacturaRequestDto request) {
+    public Invoice execute(InvoiceRequestDto request) {
         // 1. Determine Document Type and Series
-        boolean isFactura = "FACTURA".equalsIgnoreCase(request.getTipoComprobante());
-        String serie = isFactura ? "F001" : "B001";
-        String documentType = isFactura ? "01" : "03";
+        boolean isInvoice = "INVOICE".equalsIgnoreCase(request.getDocumentType());
+        String series = isInvoice ? "F001" : "B001";
+        String documentType = isInvoice ? "01" : "03";
 
         // 2. Validate taxpayer
         Taxpayer taxpayer;
-        if (isFactura) {
-            taxpayer = getTaxpayerInfoUseCase.execute(request.getNumeroDocumentoCliente());
+        if (isInvoice) {
+            taxpayer = getTaxpayerInfoUseCase.execute(request.getCustomerDocumentNumber());
         } else {
-            // For Boleta, we don't query Searchpe, we just use the provided data
-            if (request.getNombreCliente() == null || request.getNombreCliente().trim().isEmpty()) {
-                throw new RuntimeException("El nombreCliente es obligatorio para emitir Boletas.");
+            // For Boleta/RECEIPT, we don't query Searchpe, we just use the provided data
+            if (request.getCustomerName() == null || request.getCustomerName().trim().isEmpty()) {
+                throw new RuntimeException("customerName is required to issue a RECEIPT.");
             }
             taxpayer = new Taxpayer();
-            taxpayer.setRuc(request.getNumeroDocumentoCliente());
-            taxpayer.setNombre(request.getNombreCliente());
+            taxpayer.setRuc(request.getCustomerDocumentNumber());
+            taxpayer.setNombre(request.getCustomerName());
         }
 
         // 3. Validate Issuer Company
-        com.facthub.billing.company.domain.model.Company company = getCompanyByRucUseCase.execute(request.getRucEmisor());
+        com.facthub.billing.company.domain.model.Company company = getCompanyByRucUseCase.execute(request.getIssuerRuc());
 
         // 4. Generate sequence number
-        int numeroFactura = obtenerSiguienteNumero(serie);
+        int invoiceNumber = getNextNumber(series);
 
         // 5. Create invoice record in PENDING state
         Invoice invoice = Invoice.builder()
                 .documentType(documentType)
                 .issuerRuc(company.getRuc())
-                .series(serie)
-                .number(numeroFactura)
+                .series(series)
+                .number(invoiceNumber)
                 .customerRuc(taxpayer.getRuc())
                 .customerName(taxpayer.getNombre())
                 .totalAmount(calculateTotal(request))
@@ -88,18 +88,18 @@ public class GenerateInvoiceUseCase {
                 .build();
 
         // 5. Generate and sign XML
-        String xmlFirmado;
+        String signedXml;
         try {
-            xmlFirmado = xBuilderService.generarYFirmarFacturaXml(invoice, request, taxpayer, company);
+            signedXml = xBuilderService.generateAndSignInvoiceXml(invoice, request, taxpayer, company);
         } catch (Exception e) {
-            throw new RuntimeException("Error al generar XML de factura: " + e.getMessage(), e);
+            throw new RuntimeException("Error generating invoice XML: " + e.getMessage(), e);
         }
 
         // Save invoice
         invoice = invoiceRepository.save(invoice);
 
         // 6. Send to SUNAT
-        SunatTicket sunatTicket = sendToSunatUseCase.execute(xmlFirmado, company);
+        SunatTicket sunatTicket = sendToSunatUseCase.execute(signedXml, company);
 
         // 7. Update invoice with SUNAT response
         invoice.setSunatStatus(sunatTicket.isAccepted() ? "ACCEPTED" : "PENDING");
@@ -109,19 +109,19 @@ public class GenerateInvoiceUseCase {
         return invoice;
     }
 
-    private BigDecimal calculateTotal(FacturaRequestDto request) {
+    private BigDecimal calculateTotal(InvoiceRequestDto request) {
         return request.getItems().stream()
-                .map(item -> item.getPrecioUnitario().multiply(item.getCantidad()))
+                .map(item -> item.getUnitPrice().multiply(item.getQuantity()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    private int obtenerSiguienteNumero(String serie) {
-        int updatedRows = sequenceRepository.incrementAndGetNumber(serie);
+    private int getNextNumber(String series) {
+        int updatedRows = sequenceRepository.incrementAndGetNumber(series);
         if (updatedRows == 0) {
-            throw new RuntimeException("Serie de factura no encontrada: " + serie);
+            throw new RuntimeException("Invoice series not found: " + series);
         }
-        InvoiceSequence sequence = sequenceRepository.findById(serie)
-                .orElseThrow(() -> new RuntimeException("Error al obtener correlativo para serie: " + serie));
+        InvoiceSequence sequence = sequenceRepository.findById(series)
+                .orElseThrow(() -> new RuntimeException("Error getting correlative for series: " + series));
         return sequence.getLastNumber();
     }
 }

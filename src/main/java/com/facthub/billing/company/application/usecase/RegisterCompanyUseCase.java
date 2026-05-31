@@ -19,16 +19,16 @@ public class RegisterCompanyUseCase {
     }
 
     /**
-     * Registra una nueva empresa en la base de datos junto con su certificado digital.
-     * Si la empresa ya existe, actualiza sus datos y su certificado.
+     * Registers a new company in the database along with its digital certificate.
+     * If the company already exists, updates its data and certificate.
      *
-     * @param ruc RUC de la empresa
-     * @param businessName Razón Social
-     * @param sunatSolUsername Usuario SOL
-     * @param sunatSolPassword Clave SOL
-     * @param certificatePassword Clave del certificado .pfx
-     * @param certificateFile Archivo .pfx enviado por multipart
-     * @return La empresa registrada
+     * @param ruc Company RUC
+     * @param businessName Business Name
+     * @param sunatSolUsername SOL Username
+     * @param sunatSolPassword SOL Password
+     * @param certificatePassword Password for the .pfx certificate
+     * @param certificateFile The .pfx file sent via multipart
+     * @return The registered company
      */
     @Transactional
     public Company execute(
@@ -40,14 +40,14 @@ public class RegisterCompanyUseCase {
             MultipartFile certificateFile) {
 
         if (certificateFile == null || certificateFile.isEmpty()) {
-            throw new IllegalArgumentException("El archivo del certificado digital (.pfx) es obligatorio.");
+            throw new IllegalArgumentException("The digital certificate file (.pfx) is required.");
         }
 
         byte[] certificateBytes;
         try {
             certificateBytes = certificateFile.getBytes();
         } catch (IOException e) {
-            throw new RuntimeException("Error al leer el archivo de certificado: " + e.getMessage(), e);
+            throw new RuntimeException("Error reading the certificate file: " + e.getMessage(), e);
         }
 
         Optional<Company> existingCompanyOpt = companyRepository.findByRuc(ruc);

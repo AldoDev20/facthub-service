@@ -19,30 +19,30 @@ public class CompanyDataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Cargar el certificado de prueba de los recursos
+        // Load the test certificate from resources
         ClassPathResource certResource = new ClassPathResource("certificado-prueba.pfx");
         byte[] certBytes;
         try (InputStream is = certResource.getInputStream()) {
             certBytes = is.readAllBytes();
         }
 
-        // Definir los 3 Talleres fijos para la demostración
-        var talleresDemo = java.util.List.of(
+        // Define the 3 fixed Workshops for the demonstration
+        var demoWorkshops = java.util.List.of(
             new String[]{"20551234567", "TALLER MULTIMARCAS E.I.R.L."},
             new String[]{"20601234568", "MOTORES DEL NORTE S.A."},
             new String[]{"20543216789", "TECNOLOGIA Y MOTORES PERU S.A.C."}
         );
 
-        for (String[] taller : talleresDemo) {
-            String ruc = taller[0];
-            String nombre = taller[1];
+        for (String[] workshop : demoWorkshops) {
+            String ruc = workshop[0];
+            String name = workshop[1];
 
             if (companyRepository.findByRuc(ruc).isEmpty()) {
-                System.out.println("Inicializando Empresa de Prueba en la BD: " + nombre);
+                System.out.println("Initializing Test Company in DB: " + name);
 
                 Company testCompany = Company.builder()
                         .ruc(ruc)
-                        .businessName(nombre)
+                        .businessName(name)
                         .sunatSolUsername("12345678959MODDATOS")
                         .sunatSolPassword("MODDATOS")
                         .certificateContent(certBytes)
@@ -50,7 +50,7 @@ public class CompanyDataInitializer implements CommandLineRunner {
                         .build();
 
                 companyRepository.save(testCompany);
-                System.out.println("Taller registrado exitosamente: " + ruc);
+                System.out.println("Workshop registered successfully: " + ruc);
             }
         }
     }

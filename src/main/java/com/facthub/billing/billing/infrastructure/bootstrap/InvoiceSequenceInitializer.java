@@ -20,11 +20,11 @@ public class InvoiceSequenceInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         List<String> requiredSeries = List.of("F001", "B001");
 
-        for (String serie : requiredSeries) {
-            if (!sequenceRepository.existsById(serie)) {
-                System.out.println("Inicializando serie en la base de datos: " + serie);
+        for (String series : requiredSeries) {
+            if (!sequenceRepository.existsById(series)) {
+                System.out.println("Initializing series in the database: " + series);
                 InvoiceSequence sequence = new InvoiceSequence();
-                sequence.setSeries(serie);
+                sequence.setSeries(series);
                 sequence.setLastNumber(0);
                 sequenceRepository.save(sequence);
             }

@@ -27,34 +27,34 @@ public class XSenderSunatService {
     /**
      * Sends signed XML invoice to SUNAT via SOAP.
      *
-     * @param xmlFirmado the signed XML content
+     * @param signedXml the signed XML content
      * @param company the issuer company containing credentials
      * @return response from SUNAT
      * @throws Exception if transmission fails
      */
-    public SunatResponse enviarFactura(String xmlFirmado, com.facthub.billing.company.domain.model.Company company) throws Exception {
-        // 1. Configurar URLs dinámicamente desde application.properties (o default a Beta)
+    public SunatResponse sendInvoice(String signedXml, com.facthub.billing.company.domain.model.Company company) throws Exception {
+        // 1. Configure URLs dynamically from application.properties (or default to Beta)
         CompanyURLs companyURLs = CompanyURLs.builder()
                 .invoice(sunatUrl)
                 .build();
 
-        // 2. Configurar Credenciales Dinámicas de la Empresa
+        // 2. Configure Dynamic Company Credentials
         CompanyCredentials credentials = CompanyCredentials.builder()
                 .username(company.getSunatSolUsername())
                 .password(company.getSunatSolPassword())
                 .build();
 
-        // 3. Analizar XML y obtener datos para envío
-        byte[] xmlBytes = xmlFirmado.getBytes(StandardCharsets.UTF_8);
+        // 3. Analyze XML and get data for sending
+        byte[] xmlBytes = signedXml.getBytes(StandardCharsets.UTF_8);
         BillServiceXMLFileAnalyzer fileAnalyzer = new BillServiceXMLFileAnalyzer(xmlBytes, companyURLs);
         
         var zipFile = fileAnalyzer.getZipFile();
         var fileDestination = fileAnalyzer.getSendFileDestination();
 
-        // 4. Construir datos de Camel
+        // 4. Build Camel data
         var camelData = CamelUtils.getBillServiceCamelData(zipFile, fileDestination, credentials);
 
-        // 5. Enviar a SUNAT usando CamelContext
+        // 5. Send to SUNAT using CamelContext
         return camelContext.createProducerTemplate()
                 .requestBodyAndHeaders(
                         Constants.XSENDER_BILL_SERVICE_URI,

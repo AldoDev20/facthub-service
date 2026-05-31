@@ -17,22 +17,22 @@ public class SendInvoiceToSunatUseCase {
     /**
      * Sends signed XML to SUNAT and returns ticket information.
      *
-     * @param xmlFirmado the signed XML content
+     * @param signedXml the signed XML content
      * @param company the issuer company containing credentials
      * @return SunatTicket with transmission result
      */
-    public SunatTicket execute(String xmlFirmado, com.facthub.billing.company.domain.model.Company company) {
+    public SunatTicket execute(String signedXml, com.facthub.billing.company.domain.model.Company company) {
         try {
-            SunatResponse response = sunatService.enviarFactura(xmlFirmado, company);
+            SunatResponse response = sunatService.sendInvoice(signedXml, company);
 
             return SunatTicket.builder()
                     .status(response.getStatus() != null ? response.getStatus().toString() : "UNKNOWN")
                     .ticket(response.getSunat() != null ? response.getSunat().getTicket() : null)
                     .cdrContent(response.getSunat() != null ? response.getSunat().getCdr() : null)
-                    .description("XML enviado a SUNAT")
+                    .description("XML sent to SUNAT")
                     .build();
         } catch (Exception e) {
-            throw new RuntimeException("Error al enviar factura a SUNAT: " + e.getMessage(), e);
+            throw new RuntimeException("Error sending invoice to SUNAT: " + e.getMessage(), e);
         }
     }
 }
