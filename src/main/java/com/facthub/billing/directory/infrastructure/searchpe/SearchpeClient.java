@@ -32,7 +32,7 @@ public class SearchpeClient {
                     .uri(URI.create(url))
                     .GET()
                     .header("Accept", "application/json")
-                    .timeout(java.time.Duration.ofSeconds(15))
+                    .timeout(java.time.Duration.ofSeconds(60))
                     .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
