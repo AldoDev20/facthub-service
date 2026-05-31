@@ -43,13 +43,13 @@ public class XBuilderFacturacionService {
      * @return signed XML as String
      * @throws Exception if generation or signing fails
      */
-    public String generarYFirmarFacturaXml(Invoice invoice, FacturaRequestDto request, Taxpayer taxpayer) throws Exception {
+    public String generarYFirmarFacturaXml(Invoice invoice, FacturaRequestDto request, Taxpayer taxpayer, com.facthub.billing.company.domain.model.Company company) throws Exception {
         int numeroFactura = invoice.getNumber();
 
-        // 1. Build Provider
+        // 1. Build Provider dynamically from Company
         Proveedor proveedor = Proveedor.builder()
-                .ruc("20123456789")
-                .razonSocial("EMPRESA EMISORA DE PRUEBA S.A.C.")
+                .ruc(company.getRuc())
+                .razonSocial(company.getBusinessName())
                 .build();
 
         // 2. Build Customer
@@ -91,11 +91,11 @@ public class XBuilderFacturacionService {
         // 6. Render Raw XML
         String xmlCrudo = TemplateProducer.getInstance().getInvoice().data(input).render();
 
-        // 7. Cargar certificado y FIRMAR el XML
-        InputStream ksInputStream = new ClassPathResource("certificado-prueba.pfx").getInputStream();
-        CertificateDetails certificate = CertificateDetailsFactory.create(ksInputStream, "miclave");
+        // 7. Cargar certificado desde la Base de Datos y FIRMAR el XML
+        InputStream ksInputStream = new java.io.ByteArrayInputStream(company.getCertificateContent());
+        CertificateDetails certificate = CertificateDetailsFactory.create(ksInputStream, company.getCertificatePassword());
 
-        Document signedXML = XMLSigner.signXML(xmlCrudo, "MiEmpresa", certificate.getX509Certificate(), certificate.getPrivateKey());
+        Document signedXML = XMLSigner.signXML(xmlCrudo, company.getBusinessName(), certificate.getX509Certificate(), certificate.getPrivateKey());
 
         // 8. Convertir el XML Firmado a String
         Transformer transformer = TransformerFactory.newInstance().newTransformer();

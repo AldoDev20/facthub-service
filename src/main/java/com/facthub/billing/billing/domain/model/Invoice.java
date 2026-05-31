@@ -28,6 +28,9 @@ public class Invoice {
     @Column(name = "document_type", nullable = false, length = 2)
     private String documentType;
 
+    @Column(name = "issuer_ruc", nullable = false, length = 11)
+    private String issuerRuc;
+
     @Column(nullable = false, length = 4)
     private String series;
 

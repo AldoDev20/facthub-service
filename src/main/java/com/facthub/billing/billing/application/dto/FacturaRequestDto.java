@@ -16,6 +16,9 @@ import java.util.List;
 @AllArgsConstructor
 public class FacturaRequestDto {
 
+    @NotBlank(message = "RUC del emisor es obligatorio")
+    private String rucEmisor;
+
     @NotBlank(message = "RUC del cliente es obligatorio")
     private String rucCliente;
 
