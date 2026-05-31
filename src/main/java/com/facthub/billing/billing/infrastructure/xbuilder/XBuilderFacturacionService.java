@@ -54,15 +54,15 @@ public class XBuilderFacturacionService {
 
         // 2. Map Catalog6 dynamically based on input
         String tipoDocInput = request.getTipoDocumentoCliente();
-        String catalog6Code = Catalog6.RUC.toString();
+        String catalog6Code = "6"; // RUC by default
         if ("DNI".equalsIgnoreCase(tipoDocInput)) {
-            catalog6Code = Catalog6.DNI.toString();
+            catalog6Code = "1";
         } else if ("CE".equalsIgnoreCase(tipoDocInput)) {
-            catalog6Code = Catalog6.CARNET_EXTRANJERIA.toString();
+            catalog6Code = "4";
         } else if ("PASAPORTE".equalsIgnoreCase(tipoDocInput)) {
-            catalog6Code = Catalog6.PASAPORTE.toString();
+            catalog6Code = "7";
         } else if ("SIN_DOCUMENTO".equalsIgnoreCase(tipoDocInput)) {
-            catalog6Code = Catalog6.SIN_RUC.toString(); // "00"
+            catalog6Code = "0";
         }
 
         // 3. Build Customer
