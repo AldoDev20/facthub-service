@@ -52,17 +52,30 @@ public class XBuilderFacturacionService {
                 .razonSocial(company.getBusinessName())
                 .build();
 
-        // 2. Build Customer
+        // 2. Map Catalog6 dynamically based on input
+        String tipoDocInput = request.getTipoDocumentoCliente();
+        String catalog6Code = Catalog6.RUC.toString();
+        if ("DNI".equalsIgnoreCase(tipoDocInput)) {
+            catalog6Code = Catalog6.DNI.toString();
+        } else if ("CE".equalsIgnoreCase(tipoDocInput)) {
+            catalog6Code = Catalog6.CARNET_EXTRANJERIA.toString();
+        } else if ("PASAPORTE".equalsIgnoreCase(tipoDocInput)) {
+            catalog6Code = Catalog6.PASAPORTE.toString();
+        } else if ("SIN_DOCUMENTO".equalsIgnoreCase(tipoDocInput)) {
+            catalog6Code = Catalog6.SIN_RUC.toString(); // "00"
+        }
+
+        // 3. Build Customer
         Cliente cliente = Cliente.builder()
                 .nombre(taxpayer.getNombre())
                 .numeroDocumentoIdentidad(taxpayer.getRuc())
-                .tipoDocumentoIdentidad(Catalog6.RUC.toString())
+                .tipoDocumentoIdentidad(catalog6Code)
                 .build();
 
-        // 3. Build Invoice using XBuilder
+        // 4. Build Invoice using XBuilder dynamically (Factura or Boleta inferred from Serie)
         var xbuilderInvoice = 
                 io.github.project.openubl.xbuilder.content.models.standard.general.Invoice.builder()
-                .serie("F001")
+                .serie(invoice.getSeries())
                 .numero(numeroFactura)
                 .proveedor(proveedor)
                 .cliente(cliente);
