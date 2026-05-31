@@ -25,19 +25,21 @@ public class XSenderSunatService {
      * Sends signed XML invoice to SUNAT via SOAP.
      *
      * @param xmlFirmado the signed XML content
+     * @param company the issuer company containing credentials
      * @return response from SUNAT
      * @throws Exception if transmission fails
      */
-    public SunatResponse enviarFactura(String xmlFirmado) throws Exception {
+    public SunatResponse enviarFactura(String xmlFirmado, com.facthub.billing.company.domain.model.Company company) throws Exception {
         // 1. Configurar URLs (Entorno Beta)
+        // TODO: Mover entorno (Beta/Producción) a configuración de properties
         CompanyURLs companyURLs = CompanyURLs.builder()
                 .invoice("https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService")
                 .build();
 
-        // 2. Configurar Credenciales de Prueba
+        // 2. Configurar Credenciales Dinámicas de la Empresa
         CompanyCredentials credentials = CompanyCredentials.builder()
-                .username("12345678959MODDATOS")
-                .password("MODDATOS")
+                .username(company.getSunatSolUsername())
+                .password(company.getSunatSolPassword())
                 .build();
 
         // 3. Analizar XML y obtener datos para envío

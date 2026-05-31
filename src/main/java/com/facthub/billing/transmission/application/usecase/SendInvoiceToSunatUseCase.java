@@ -18,11 +18,12 @@ public class SendInvoiceToSunatUseCase {
      * Sends signed XML to SUNAT and returns ticket information.
      *
      * @param xmlFirmado the signed XML content
+     * @param company the issuer company containing credentials
      * @return SunatTicket with transmission result
      */
-    public SunatTicket execute(String xmlFirmado) {
+    public SunatTicket execute(String xmlFirmado, com.facthub.billing.company.domain.model.Company company) {
         try {
-            SunatResponse response = sunatService.enviarFactura(xmlFirmado);
+            SunatResponse response = sunatService.enviarFactura(xmlFirmado, company);
 
             return SunatTicket.builder()
                     .status(response.getStatus() != null ? response.getStatus().toString() : "UNKNOWN")

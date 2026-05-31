@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 public class GenerateInvoiceUseCase {
 
     private final GetTaxpayerInfoUseCase getTaxpayerInfoUseCase;
+    private final com.facthub.billing.company.application.usecase.GetCompanyByRucUseCase getCompanyByRucUseCase;
     private final XBuilderFacturacionService xBuilderService;
     private final SendInvoiceToSunatUseCase sendToSunatUseCase;
     private final InvoiceRepository invoiceRepository;
@@ -27,11 +28,13 @@ public class GenerateInvoiceUseCase {
 
     public GenerateInvoiceUseCase(
             GetTaxpayerInfoUseCase getTaxpayerInfoUseCase,
+            com.facthub.billing.company.application.usecase.GetCompanyByRucUseCase getCompanyByRucUseCase,
             XBuilderFacturacionService xBuilderService,
             SendInvoiceToSunatUseCase sendToSunatUseCase,
             InvoiceRepository invoiceRepository,
             InvoiceSequenceRepository sequenceRepository) {
         this.getTaxpayerInfoUseCase = getTaxpayerInfoUseCase;
+        this.getCompanyByRucUseCase = getCompanyByRucUseCase;
         this.xBuilderService = xBuilderService;
         this.sendToSunatUseCase = sendToSunatUseCase;
         this.invoiceRepository = invoiceRepository;
@@ -49,12 +52,16 @@ public class GenerateInvoiceUseCase {
         // 1. Validate taxpayer
         Taxpayer taxpayer = getTaxpayerInfoUseCase.execute(request.getRucCliente());
 
-        // 2. Generate sequence number
+        // 2. Validate Issuer Company
+        com.facthub.billing.company.domain.model.Company company = getCompanyByRucUseCase.execute(request.getRucEmisor());
+
+        // 3. Generate sequence number
         int numeroFactura = obtenerSiguienteNumero("F001");
 
-        // 3. Create invoice record in PENDING state
+        // 4. Create invoice record in PENDING state
         Invoice invoice = Invoice.builder()
                 .documentType("01") // 01 = Factura
+                .issuerRuc(company.getRuc())
                 .series("F001")
                 .number(numeroFactura)
                 .customerRuc(taxpayer.getRuc())
@@ -64,10 +71,10 @@ public class GenerateInvoiceUseCase {
                 .sunatStatus("PENDING")
                 .build();
 
-        // 4. Generate and sign XML
+        // 5. Generate and sign XML
         String xmlFirmado;
         try {
-            xmlFirmado = xBuilderService.generarYFirmarFacturaXml(invoice, request, taxpayer);
+            xmlFirmado = xBuilderService.generarYFirmarFacturaXml(invoice, request, taxpayer, company);
         } catch (Exception e) {
             throw new RuntimeException("Error al generar XML de factura: " + e.getMessage(), e);
         }
@@ -75,10 +82,10 @@ public class GenerateInvoiceUseCase {
         // Save invoice
         invoice = invoiceRepository.save(invoice);
 
-        // 4. Send to SUNAT
-        SunatTicket sunatTicket = sendToSunatUseCase.execute(xmlFirmado);
+        // 6. Send to SUNAT
+        SunatTicket sunatTicket = sendToSunatUseCase.execute(xmlFirmado, company);
 
-        // 5. Update invoice with SUNAT response
+        // 7. Update invoice with SUNAT response
         invoice.setSunatStatus(sunatTicket.isAccepted() ? "ACCEPTED" : "PENDING");
         invoice.setSunatTicket(sunatTicket.getTicket());
         invoice = invoiceRepository.save(invoice);
