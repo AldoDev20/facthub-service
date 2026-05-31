@@ -27,6 +27,7 @@ public class SendInvoiceToSunatUseCase {
             return SunatTicket.builder()
                     .status(response.getStatus() != null ? response.getStatus().toString() : "UNKNOWN")
                     .ticket(response.getSunat() != null ? response.getSunat().getTicket() : null)
+                    .cdrContent(response.getSunat() != null ? response.getSunat().getCdr() : null)
                     .description("XML enviado a SUNAT")
                     .build();
         } catch (Exception e) {
