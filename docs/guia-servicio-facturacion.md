@@ -504,8 +504,8 @@ En tu nuevo proyecto, deberás añadir estas propiedades para conectar Spring Bo
 # CONFIGURACIÓN DE BASE DE DATOS (POSTGRESQL - AIVEN CLOUD)
 # ===============================
 spring.datasource.url=jdbc:postgresql://facthub-facthub.d.aivencloud.com:13247/defaultdb?sslmode=require
-spring.datasource.username=avnadmin
-spring.datasource.password=<TU_PASSWORD_AQUI>
+spring.datasource.username=${DB_USERNAME:avnadmin}
+spring.datasource.password=${DB_PASSWORD}
 spring.datasource.driver-class-name=org.postgresql.Driver
 
 # Hibernate ddl-auto (update para desarrollo, validate para producción)
