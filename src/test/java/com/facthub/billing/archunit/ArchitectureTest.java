@@ -19,7 +19,7 @@ public class ArchitectureTest {
     //         classes().that().resideInAPackage("..controller..")
     //                 .should().haveSimpleNameEndingWith("Controller");
 
-    // TODO: Enable when DTO classes are added
+    // TODO: Enable when we fix ArchUnit classpath scanning
     // @ArchTest
     // static final ArchRule dtos_must_end_with_Dto =
     //         classes().that().resideInAPackage("..dto..")
