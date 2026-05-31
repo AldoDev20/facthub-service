@@ -28,7 +28,10 @@ class XBuilderFacturacionServiceTest {
         item1.setPrecioUnitario(new BigDecimal("1500.00"));
 
         FacturaRequestDto request = new FacturaRequestDto();
-        request.setRucCliente("20100078941");
+        request.setRucEmisor("20123456789");
+        request.setTipoComprobante("FACTURA");
+        request.setTipoDocumentoCliente("RUC");
+        request.setNumeroDocumentoCliente("20100078941");
         request.setItems(List.of(item1));
 
         Taxpayer taxpayer = Taxpayer.builder()
@@ -38,8 +41,20 @@ class XBuilderFacturacionServiceTest {
                 .condicionDomicilio("HABIDO")
                 .build();
 
+        // Crear Company simulado para el test
+        byte[] certBytes;
+        try (java.io.InputStream is = new org.springframework.core.io.ClassPathResource("certificado-prueba.pfx").getInputStream()) {
+            certBytes = is.readAllBytes();
+        }
+        com.facthub.billing.company.domain.model.Company company = com.facthub.billing.company.domain.model.Company.builder()
+                .ruc("20123456789")
+                .businessName("MiEmpresa")
+                .certificateContent(certBytes)
+                .certificatePassword("miclave")
+                .build();
+
         // Act
-        String xmlFirmado = service.generarYFirmarFacturaXml(invoice, request, taxpayer);
+        String xmlFirmado = service.generarYFirmarFacturaXml(invoice, request, taxpayer, company);
 
         // Assert
         assertNotNull(xmlFirmado, "El XML firmado no debe ser nulo");

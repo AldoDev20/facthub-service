@@ -3,7 +3,6 @@ package com.facthub.billing.billing.infrastructure.xbuilder;
 import com.facthub.billing.billing.application.dto.FacturaRequestDto;
 import com.facthub.billing.billing.domain.model.Invoice;
 import com.facthub.billing.directory.domain.model.Taxpayer;
-import io.github.project.openubl.xbuilder.content.catalogs.Catalog6;
 import io.github.project.openubl.xbuilder.content.models.common.Cliente;
 import io.github.project.openubl.xbuilder.content.models.common.Proveedor;
 import io.github.project.openubl.xbuilder.content.models.standard.general.DocumentoVentaDetalle;
@@ -14,7 +13,6 @@ import io.github.project.openubl.xbuilder.renderer.TemplateProducer;
 import io.github.project.openubl.xbuilder.signature.CertificateDetails;
 import io.github.project.openubl.xbuilder.signature.CertificateDetailsFactory;
 import io.github.project.openubl.xbuilder.signature.XMLSigner;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 

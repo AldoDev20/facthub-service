@@ -21,6 +21,9 @@ public class XSenderSunatService {
     @Autowired
     private CamelContext camelContext;
 
+    @org.springframework.beans.factory.annotation.Value("${sunat.environment.url:https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService}")
+    private String sunatUrl;
+
     /**
      * Sends signed XML invoice to SUNAT via SOAP.
      *
@@ -30,10 +33,9 @@ public class XSenderSunatService {
      * @throws Exception if transmission fails
      */
     public SunatResponse enviarFactura(String xmlFirmado, com.facthub.billing.company.domain.model.Company company) throws Exception {
-        // 1. Configurar URLs (Entorno Beta)
-        // TODO: Mover entorno (Beta/Producción) a configuración de properties
+        // 1. Configurar URLs dinámicamente desde application.properties (o default a Beta)
         CompanyURLs companyURLs = CompanyURLs.builder()
-                .invoice("https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService")
+                .invoice(sunatUrl)
                 .build();
 
         // 2. Configurar Credenciales Dinámicas de la Empresa
