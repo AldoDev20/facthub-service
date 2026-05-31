@@ -4,18 +4,7 @@ import com.facthub.billing.billing.application.dto.FacturaRequestDto;
 import com.facthub.billing.billing.domain.model.InvoiceSequence;
 import com.facthub.billing.billing.domain.repository.InvoiceSequenceRepository;
 import com.facthub.billing.directory.domain.model.Taxpayer;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
-import org.w3c.dom.Document;
-
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.math.BigDecimal;
-import java.time.LocalDate;
 
 /**
  * Service for generating and signing invoice XML using XBuilder.
@@ -42,7 +31,7 @@ public class XBuilderFacturacionService {
         // 1. Obtener correlativo
         int numeroFactura = obtenerSiguienteNumero("F001");
 
-        // TODO: Implement actual XBuilder integration
+        // Pending: Implement actual XBuilder integration
         // This requires exploring the XBuilder 5.0.2 API to get correct package names
         // Placeholder for now - will be completed in next iteration
 
@@ -54,7 +43,7 @@ public class XBuilderFacturacionService {
         // 6. Cargar certificado y firmar con XMLSigner
         // 7. Convertir Document a String
 
-        String xmlPlaceholder = "<?xml version=\"1.0\"?><placeholder>XML pending implementation</placeholder>";
+        String xmlPlaceholder = "<?xml version=\"1.0\"?><placeholder>XML pending implementation for F001-" + numeroFactura + "</placeholder>";
         return xmlPlaceholder;
     }
 
