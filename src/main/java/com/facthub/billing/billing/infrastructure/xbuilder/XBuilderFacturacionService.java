@@ -3,7 +3,29 @@ package com.facthub.billing.billing.infrastructure.xbuilder;
 import com.facthub.billing.billing.application.dto.FacturaRequestDto;
 import com.facthub.billing.billing.domain.model.Invoice;
 import com.facthub.billing.directory.domain.model.Taxpayer;
+import io.github.project.openubl.xbuilder.content.catalogs.Catalog6;
+import io.github.project.openubl.xbuilder.content.models.common.Cliente;
+import io.github.project.openubl.xbuilder.content.models.common.Proveedor;
+import io.github.project.openubl.xbuilder.content.models.standard.general.DocumentoVentaDetalle;
+import io.github.project.openubl.xbuilder.enricher.ContentEnricher;
+import io.github.project.openubl.xbuilder.enricher.config.DateProvider;
+import io.github.project.openubl.xbuilder.enricher.config.Defaults;
+import io.github.project.openubl.xbuilder.renderer.TemplateProducer;
+import io.github.project.openubl.xbuilder.signature.CertificateDetails;
+import io.github.project.openubl.xbuilder.signature.CertificateDetailsFactory;
+import io.github.project.openubl.xbuilder.signature.XMLSigner;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.w3c.dom.Document;
+
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 /**
  * Service for generating and signing invoice XML using XBuilder.
@@ -24,20 +46,63 @@ public class XBuilderFacturacionService {
     public String generarYFirmarFacturaXml(Invoice invoice, FacturaRequestDto request, Taxpayer taxpayer) throws Exception {
         int numeroFactura = invoice.getNumber();
 
-        // Pending: Implement actual XBuilder integration
-        // This requires exploring the XBuilder 5.0.2 API to get correct package names
-        // Placeholder for now - will be completed in next iteration
+        // 1. Build Provider
+        Proveedor proveedor = Proveedor.builder()
+                .ruc("20123456789")
+                .razonSocial("EMPRESA EMISORA DE PRUEBA S.A.C.")
+                .build();
 
-        // Steps to implement:
-        // 2. Construir cabecera usando XBuilder (Invoice.builder()...)
-        // 3. Agregar los productos dinámicamente
-        // 4. Enriquecer con ContentEnricher (cálculo automático de IGV, Total, etc)
-        // 5. Renderizar a XML crudo con TemplateProducer
-        // 6. Cargar certificado y firmar con XMLSigner
-        // 7. Convertir Document a String
+        // 2. Build Customer
+        Cliente cliente = Cliente.builder()
+                .nombre(taxpayer.getNombre())
+                .numeroDocumentoIdentidad(taxpayer.getRuc())
+                .tipoDocumentoIdentidad(Catalog6.RUC.toString())
+                .build();
 
-        String xmlPlaceholder = "<?xml version=\"1.0\"?><placeholder>XML pending implementation for F001-" + numeroFactura + "</placeholder>";
-        return xmlPlaceholder;
+        // 3. Build Invoice using XBuilder
+        io.github.project.openubl.xbuilder.content.models.standard.general.Invoice.InvoiceBuilder xbuilderInvoice = 
+                io.github.project.openubl.xbuilder.content.models.standard.general.Invoice.builder()
+                .serie("F001")
+                .numero(numeroFactura)
+                .proveedor(proveedor)
+                .cliente(cliente);
+
+        // 4. Add items dynamically
+        request.getItems().forEach(item -> {
+            xbuilderInvoice.detalle(DocumentoVentaDetalle.builder()
+                    .descripcion(item.getDescripcion())
+                    .cantidad(item.getCantidad())
+                    .precio(item.getPrecioUnitario())
+                    .unidadMedida("NIU") // NIU = Unidades
+                    .build());
+        });
+
+        io.github.project.openubl.xbuilder.content.models.standard.general.Invoice input = xbuilderInvoice.build();
+
+        // 5. Configure Defaults & Enricher
+        Defaults defaults = Defaults.builder()
+                .igvTasa(new BigDecimal("0.18"))
+                .build();
+        DateProvider dateProvider = () -> LocalDate.now();
+
+        ContentEnricher enricher = new ContentEnricher(defaults, dateProvider);
+        enricher.enrich(input);
+
+        // 6. Render Raw XML
+        String xmlCrudo = TemplateProducer.getInstance().getInvoice().data(input).render();
+
+        // 7. Cargar certificado y FIRMAR el XML
+        InputStream ksInputStream = new ClassPathResource("certificado-prueba.pfx").getInputStream();
+        CertificateDetails certificate = CertificateDetailsFactory.create(ksInputStream, "miclave");
+
+        Document signedXML = XMLSigner.signXML(xmlCrudo, "MiEmpresa", certificate.getX509Certificate(), certificate.getPrivateKey());
+
+        // 8. Convertir el XML Firmado a String
+        Transformer transformer = TransformerFactory.newInstance().newTransformer();
+        StringWriter writer = new StringWriter();
+        transformer.transform(new DOMSource(signedXML), new StreamResult(writer));
+
+        return writer.toString();
     }
 
 }
