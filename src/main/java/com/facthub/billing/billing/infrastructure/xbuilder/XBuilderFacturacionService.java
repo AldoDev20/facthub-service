@@ -60,7 +60,7 @@ public class XBuilderFacturacionService {
                 .build();
 
         // 3. Build Invoice using XBuilder
-        io.github.project.openubl.xbuilder.content.models.standard.general.Invoice.InvoiceBuilder xbuilderInvoice = 
+        var xbuilderInvoice = 
                 io.github.project.openubl.xbuilder.content.models.standard.general.Invoice.builder()
                 .serie("F001")
                 .numero(numeroFactura)
