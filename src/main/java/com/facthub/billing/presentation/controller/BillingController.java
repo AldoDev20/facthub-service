@@ -54,8 +54,7 @@ public class BillingController {
             Map<String, Object> sunatInfo = new HashMap<>();
             sunatInfo.put("status", invoice.getSunatStatus());
             sunatInfo.put("ticket", invoice.getSunatTicket());
-            sunatInfo.put("xmlFilePath", invoice.getXmlFilePath());
-            sunatInfo.put("cdrFilePath", invoice.getCdrFilePath());
+            sunatInfo.put("xmlContent", invoice.getXmlContent());
 
             response.put("invoice", invoiceInfo);
             response.put("sunat", sunatInfo);

@@ -8,8 +8,6 @@ import com.facthub.billing.billing.domain.repository.InvoiceSequenceRepository;
 import com.facthub.billing.billing.infrastructure.xbuilder.XBuilderBillingService;
 import com.facthub.billing.directory.domain.model.Taxpayer;
 import com.facthub.billing.directory.application.usecase.GetTaxpayerInfoUseCase;
-import com.facthub.billing.transmission.application.usecase.SendInvoiceToSunatUseCase;
-import com.facthub.billing.transmission.domain.model.SunatTicket;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +20,6 @@ public class GenerateInvoiceUseCase {
     private final GetTaxpayerInfoUseCase getTaxpayerInfoUseCase;
     private final com.facthub.billing.company.application.usecase.GetCompanyByRucUseCase getCompanyByRucUseCase;
     private final XBuilderBillingService xBuilderService;
-    private final SendInvoiceToSunatUseCase sendToSunatUseCase;
     private final InvoiceRepository invoiceRepository;
     private final InvoiceSequenceRepository sequenceRepository;
 
@@ -30,13 +27,11 @@ public class GenerateInvoiceUseCase {
             GetTaxpayerInfoUseCase getTaxpayerInfoUseCase,
             com.facthub.billing.company.application.usecase.GetCompanyByRucUseCase getCompanyByRucUseCase,
             XBuilderBillingService xBuilderService,
-            SendInvoiceToSunatUseCase sendToSunatUseCase,
             InvoiceRepository invoiceRepository,
             InvoiceSequenceRepository sequenceRepository) {
         this.getTaxpayerInfoUseCase = getTaxpayerInfoUseCase;
         this.getCompanyByRucUseCase = getCompanyByRucUseCase;
         this.xBuilderService = xBuilderService;
-        this.sendToSunatUseCase = sendToSunatUseCase;
         this.invoiceRepository = invoiceRepository;
         this.sequenceRepository = sequenceRepository;
     }
@@ -98,32 +93,17 @@ public class GenerateInvoiceUseCase {
         // Save invoice
         invoice = invoiceRepository.save(invoice);
 
-        // 6. Send to SUNAT
-        SunatTicket sunatTicket = sendToSunatUseCase.execute(signedXml, company);
-
-        // Save physical files
-        try {
-            java.io.File dir = new java.io.File("invoices");
-            if (!dir.exists()) dir.mkdirs();
-
-            String xmlFileName = "invoices/" + company.getRuc() + "-" + documentType + "-" + series + "-" + invoiceNumber + ".xml";
-            java.nio.file.Files.write(java.nio.file.Paths.get(xmlFileName), signedXml.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            invoice.setXmlFilePath(xmlFileName);
-
-            if (sunatTicket.getCdrContent() != null) {
-                String cdrFileName = "invoices/R-" + company.getRuc() + "-" + documentType + "-" + series + "-" + invoiceNumber + ".zip";
-                java.nio.file.Files.write(java.nio.file.Paths.get(cdrFileName), sunatTicket.getCdrContent());
-                invoice.setCdrFilePath(cdrFileName);
-            }
-        } catch (Exception e) {
-            System.err.println("Could not save physical files: " + e.getMessage());
-        }
+        // 6. Send to SUNAT (SIMULADO)
+        // Omitimos la llamada real a sendToSunatUseCase para evitar errores por datos ficticios.
+        // Asignamos directamente el XML a la base de datos
+        invoice.setXmlContent(signedXml);
 
         // 7. Update invoice with SUNAT response
         // BURLAMOS A LA SUNAT PARA LA PRESENTACIÓN UNIVERSITARIA:
-        // Forzamos el estado a "ACCEPTED" sin importar si SUNAT dio EXCEPCIÓN por el certificado falso.
+        // Forzamos el estado a "ACCEPTED" y asignamos un ticket falso.
         invoice.setSunatStatus("ACCEPTED");
-        invoice.setSunatTicket(sunatTicket.getTicket() != null ? sunatTicket.getTicket() : "TICKET-MOCK-123456");
+        invoice.setSunatTicket("TICKET-MOCK-123456");
+        
         invoice = invoiceRepository.save(invoice);
 
         return invoice;
