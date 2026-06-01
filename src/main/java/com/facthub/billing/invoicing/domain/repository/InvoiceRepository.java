@@ -1,6 +1,6 @@
-package com.facthub.billing.billing.domain.repository;
+package com.facthub.billing.invoicing.domain.repository;
 
-import com.facthub.billing.billing.domain.model.Invoice;
+import com.facthub.billing.invoicing.domain.model.Invoice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

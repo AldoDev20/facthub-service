@@ -1,8 +1,8 @@
-package com.facthub.billing.presentation.controller;
+package com.facthub.billing.invoicing.presentation.rest;
 
-import com.facthub.billing.billing.application.dto.InvoiceRequestDto;
-import com.facthub.billing.billing.application.usecase.GenerateInvoiceUseCase;
-import com.facthub.billing.billing.domain.model.Invoice;
+import com.facthub.billing.invoicing.application.dto.InvoiceRequestDto;
+import com.facthub.billing.invoicing.application.usecase.GenerateInvoiceUseCase;
+import com.facthub.billing.invoicing.domain.model.Invoice;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

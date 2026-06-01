@@ -1,4 +1,4 @@
-package com.facthub.billing.billing.application.dto;
+package com.facthub.billing.invoicing.application.dto;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;

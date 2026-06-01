@@ -1,6 +1,6 @@
 package com.facthub.billing.shared.exception;
 
-import com.facthub.billing.billing.domain.exception.InvalidInvoiceException;
+import com.facthub.billing.invoicing.domain.exception.InvalidInvoiceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;

@@ -1,7 +1,7 @@
-package com.facthub.billing.billing.infrastructure.bootstrap;
+package com.facthub.billing.invoicing.infrastructure.bootstrap;
 
-import com.facthub.billing.billing.domain.model.InvoiceSequence;
-import com.facthub.billing.billing.domain.repository.InvoiceSequenceRepository;
+import com.facthub.billing.invoicing.domain.model.InvoiceSequence;
+import com.facthub.billing.invoicing.domain.repository.InvoiceSequenceRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 

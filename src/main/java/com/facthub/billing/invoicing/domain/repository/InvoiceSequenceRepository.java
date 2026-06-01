@@ -1,6 +1,6 @@
-package com.facthub.billing.billing.domain.repository;
+package com.facthub.billing.invoicing.domain.repository;
 
-import com.facthub.billing.billing.domain.model.InvoiceSequence;
+import com.facthub.billing.invoicing.domain.model.InvoiceSequence;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
