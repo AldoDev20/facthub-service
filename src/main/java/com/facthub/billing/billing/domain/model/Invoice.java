@@ -55,11 +55,8 @@ public class Invoice {
     @Column(name = "sunat_ticket", length = 100)
     private String sunatTicket;
 
-    @Column(name = "xml_file_path", length = 500)
-    private String xmlFilePath;
-
-    @Column(name = "cdr_file_path", length = 500)
-    private String cdrFilePath;
+    @Column(name = "xml_content", columnDefinition = "TEXT")
+    private String xmlContent;
 
     @PrePersist
     protected void onCreate() {

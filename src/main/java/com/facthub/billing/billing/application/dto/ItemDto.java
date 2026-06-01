@@ -12,7 +12,12 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ItemDto {
-    private String descripcion;
-    private BigDecimal cantidad;
-    private BigDecimal precioUnitario;
+    /** Description of the item or service */
+    private String description;
+
+    /** Quantity of the item */
+    private BigDecimal quantity;
+
+    /** Unit price of the item */
+    private BigDecimal unitPrice;
 }

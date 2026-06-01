@@ -1,9 +1,8 @@
 package com.facthub.billing.billing.infrastructure.xbuilder;
 
-import com.facthub.billing.billing.application.dto.FacturaRequestDto;
+import com.facthub.billing.billing.application.dto.InvoiceRequestDto;
 import com.facthub.billing.billing.domain.model.Invoice;
 import com.facthub.billing.directory.domain.model.Taxpayer;
-import io.github.project.openubl.xbuilder.content.catalogs.Catalog6;
 import io.github.project.openubl.xbuilder.content.models.common.Cliente;
 import io.github.project.openubl.xbuilder.content.models.common.Proveedor;
 import io.github.project.openubl.xbuilder.content.models.standard.general.DocumentoVentaDetalle;
@@ -14,7 +13,6 @@ import io.github.project.openubl.xbuilder.renderer.TemplateProducer;
 import io.github.project.openubl.xbuilder.signature.CertificateDetails;
 import io.github.project.openubl.xbuilder.signature.CertificateDetailsFactory;
 import io.github.project.openubl.xbuilder.signature.XMLSigner;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 
@@ -29,10 +27,9 @@ import java.time.LocalDate;
 
 /**
  * Service for generating and signing invoice XML using XBuilder.
- * Implementation will be completed with actual XBuilder API calls.
  */
 @Service
-public class XBuilderFacturacionService {
+public class XBuilderBillingService {
 
     /**
      * Generates and signs an invoice XML using XBuilder.
@@ -40,33 +37,34 @@ public class XBuilderFacturacionService {
      * @param invoice the invoice entity
      * @param request the invoice request DTO
      * @param taxpayer the validated taxpayer information
+     * @param company the company emitting the invoice
      * @return signed XML as String
      * @throws Exception if generation or signing fails
      */
-    public String generarYFirmarFacturaXml(Invoice invoice, FacturaRequestDto request, Taxpayer taxpayer, com.facthub.billing.company.domain.model.Company company) throws Exception {
-        int numeroFactura = invoice.getNumber();
+    public String generateAndSignInvoiceXml(Invoice invoice, InvoiceRequestDto request, Taxpayer taxpayer, com.facthub.billing.company.domain.model.Company company) throws Exception {
+        int invoiceNumber = invoice.getNumber();
 
         // 1. Build Provider dynamically from Company
-        Proveedor proveedor = Proveedor.builder()
+        Proveedor provider = Proveedor.builder()
                 .ruc(company.getRuc())
                 .razonSocial(company.getBusinessName())
                 .build();
 
         // 2. Map Catalog6 dynamically based on input
-        String tipoDocInput = request.getTipoDocumentoCliente();
+        String documentTypeInput = request.getCustomerDocumentType();
         String catalog6Code = "6"; // RUC by default
-        if ("DNI".equalsIgnoreCase(tipoDocInput)) {
+        if ("DNI".equalsIgnoreCase(documentTypeInput)) {
             catalog6Code = "1";
-        } else if ("CE".equalsIgnoreCase(tipoDocInput)) {
+        } else if ("CE".equalsIgnoreCase(documentTypeInput)) {
             catalog6Code = "4";
-        } else if ("PASAPORTE".equalsIgnoreCase(tipoDocInput)) {
+        } else if ("PASAPORTE".equalsIgnoreCase(documentTypeInput)) {
             catalog6Code = "7";
-        } else if ("SIN_DOCUMENTO".equalsIgnoreCase(tipoDocInput)) {
+        } else if ("SIN_DOCUMENTO".equalsIgnoreCase(documentTypeInput)) {
             catalog6Code = "0";
         }
 
         // 3. Build Customer
-        Cliente cliente = Cliente.builder()
+        Cliente customer = Cliente.builder()
                 .nombre(taxpayer.getNombre())
                 .numeroDocumentoIdentidad(taxpayer.getRuc())
                 .tipoDocumentoIdentidad(catalog6Code)
@@ -76,17 +74,17 @@ public class XBuilderFacturacionService {
         var xbuilderInvoice = 
                 io.github.project.openubl.xbuilder.content.models.standard.general.Invoice.builder()
                 .serie(invoice.getSeries())
-                .numero(numeroFactura)
-                .proveedor(proveedor)
-                .cliente(cliente);
+                .numero(invoiceNumber)
+                .proveedor(provider)
+                .cliente(customer);
 
         // 4. Add items dynamically
         request.getItems().forEach(item -> {
             xbuilderInvoice.detalle(DocumentoVentaDetalle.builder()
-                    .descripcion(item.getDescripcion())
-                    .cantidad(item.getCantidad())
-                    .precio(item.getPrecioUnitario())
-                    .unidadMedida("NIU") // NIU = Unidades
+                    .descripcion(item.getDescription())
+                    .cantidad(item.getQuantity())
+                    .precio(item.getUnitPrice())
+                    .unidadMedida("NIU") // NIU = Units
                     .build());
         });
 
@@ -102,15 +100,15 @@ public class XBuilderFacturacionService {
         enricher.enrich(input);
 
         // 6. Render Raw XML
-        String xmlCrudo = TemplateProducer.getInstance().getInvoice().data(input).render();
+        String rawXml = TemplateProducer.getInstance().getInvoice().data(input).render();
 
-        // 7. Cargar certificado desde la Base de Datos y FIRMAR el XML
+        // 7. Load certificate from Database and SIGN the XML
         InputStream ksInputStream = new java.io.ByteArrayInputStream(company.getCertificateContent());
         CertificateDetails certificate = CertificateDetailsFactory.create(ksInputStream, company.getCertificatePassword());
 
-        Document signedXML = XMLSigner.signXML(xmlCrudo, company.getBusinessName(), certificate.getX509Certificate(), certificate.getPrivateKey());
+        Document signedXML = XMLSigner.signXML(rawXml, company.getBusinessName(), certificate.getX509Certificate(), certificate.getPrivateKey());
 
-        // 8. Convertir el XML Firmado a String
+        // 8. Convert the Signed XML Document to String
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
         StringWriter writer = new StringWriter();
         transformer.transform(new DOMSource(signedXML), new StreamResult(writer));
