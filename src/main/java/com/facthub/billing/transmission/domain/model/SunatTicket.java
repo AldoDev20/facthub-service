@@ -17,6 +17,6 @@ public class SunatTicket {
     private String cdrFileName;
 
     public boolean isAccepted() {
-        return "ACCEPTED".equalsIgnoreCase(status);
+        return "ACEPTADO".equalsIgnoreCase(status) || "ACCEPTED".equalsIgnoreCase(status);
     }
 }

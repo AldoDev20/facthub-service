@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/empresas")
+@RequestMapping("/api/companies")
 public class CompanyController {
 
     private final RegisterCompanyUseCase registerCompanyUseCase;
@@ -22,8 +22,8 @@ public class CompanyController {
     }
 
     /**
-     * Endpoint para registrar o actualizar un Taller Automotriz (Tenant) y su certificado digital.
-     * Consumo: multipart/form-data
+     * Endpoint to register or update an Automotive Workshop (Tenant) and its digital certificate.
+     * Consumes: multipart/form-data
      */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, Object>> registerCompany(
@@ -46,7 +46,7 @@ public class CompanyController {
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
-            response.put("message", "Empresa registrada exitosamente");
+            response.put("message", "Company registered successfully");
             response.put("ruc", company.getRuc());
             response.put("businessName", company.getBusinessName());
 
@@ -61,7 +61,7 @@ public class CompanyController {
         } catch (Exception e) {
             Map<String, Object> error = new HashMap<>();
             error.put("success", false);
-            error.put("message", "Error interno al registrar la empresa: " + e.getMessage());
+            error.put("message", "Internal error registering company: " + e.getMessage());
             return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
