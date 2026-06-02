@@ -1,4 +1,4 @@
-package com.facthub.billing.billing.domain.model;
+package com.facthub.billing.invoicing.domain.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

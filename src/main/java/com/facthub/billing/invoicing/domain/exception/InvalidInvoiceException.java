@@ -1,4 +1,4 @@
-package com.facthub.billing.billing.domain.exception;
+package com.facthub.billing.invoicing.domain.exception;
 
 public class InvalidInvoiceException extends RuntimeException {
 

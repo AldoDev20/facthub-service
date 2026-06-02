@@ -1,11 +1,11 @@
-package com.facthub.billing.billing.application.usecase;
+package com.facthub.billing.invoicing.application.usecase;
 
-import com.facthub.billing.billing.application.dto.InvoiceRequestDto;
-import com.facthub.billing.billing.domain.model.Invoice;
-import com.facthub.billing.billing.domain.model.InvoiceSequence;
-import com.facthub.billing.billing.domain.repository.InvoiceRepository;
-import com.facthub.billing.billing.domain.repository.InvoiceSequenceRepository;
-import com.facthub.billing.billing.infrastructure.xbuilder.XBuilderBillingService;
+import com.facthub.billing.invoicing.application.dto.InvoiceRequestDto;
+import com.facthub.billing.invoicing.domain.model.Invoice;
+import com.facthub.billing.invoicing.domain.model.InvoiceSequence;
+import com.facthub.billing.invoicing.domain.repository.InvoiceRepository;
+import com.facthub.billing.invoicing.domain.repository.InvoiceSequenceRepository;
+import com.facthub.billing.invoicing.infrastructure.xbuilder.XBuilderBillingService;
 import com.facthub.billing.directory.domain.model.Taxpayer;
 import com.facthub.billing.directory.application.usecase.GetTaxpayerInfoUseCase;
 import org.springframework.stereotype.Service;

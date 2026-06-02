@@ -1,7 +1,7 @@
-package com.facthub.billing.billing.infrastructure.xbuilder;
+package com.facthub.billing.invoicing.infrastructure.xbuilder;
 
-import com.facthub.billing.billing.application.dto.InvoiceRequestDto;
-import com.facthub.billing.billing.domain.model.Invoice;
+import com.facthub.billing.invoicing.application.dto.InvoiceRequestDto;
+import com.facthub.billing.invoicing.domain.model.Invoice;
 import com.facthub.billing.directory.domain.model.Taxpayer;
 import io.github.project.openubl.xbuilder.content.models.common.Cliente;
 import io.github.project.openubl.xbuilder.content.models.common.Proveedor;

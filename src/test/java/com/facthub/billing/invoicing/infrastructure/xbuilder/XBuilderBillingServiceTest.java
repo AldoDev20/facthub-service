@@ -1,8 +1,8 @@
-package com.facthub.billing.billing.infrastructure.xbuilder;
+package com.facthub.billing.invoicing.infrastructure.xbuilder;
 
-import com.facthub.billing.billing.application.dto.InvoiceRequestDto;
-import com.facthub.billing.billing.application.dto.ItemDto;
-import com.facthub.billing.billing.domain.model.Invoice;
+import com.facthub.billing.invoicing.application.dto.InvoiceRequestDto;
+import com.facthub.billing.invoicing.application.dto.ItemDto;
+import com.facthub.billing.invoicing.domain.model.Invoice;
 import com.facthub.billing.directory.domain.model.Taxpayer;
 import org.junit.jupiter.api.Test;
 
