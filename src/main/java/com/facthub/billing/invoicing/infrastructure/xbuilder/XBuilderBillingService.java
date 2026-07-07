@@ -103,17 +103,22 @@ public class XBuilderBillingService {
         String rawXml = TemplateProducer.getInstance().getInvoice().data(input).render();
 
         // 7. Load certificate from Database and SIGN the XML
-        InputStream ksInputStream = new java.io.ByteArrayInputStream(company.getCertificateContent());
-        CertificateDetails certificate = CertificateDetailsFactory.create(ksInputStream, company.getCertificatePassword());
+        try {
+            InputStream ksInputStream = new java.io.ByteArrayInputStream(company.getCertificateContent());
+            CertificateDetails certificate = CertificateDetailsFactory.create(ksInputStream, company.getCertificatePassword());
 
-        Document signedXML = XMLSigner.signXML(rawXml, company.getBusinessName(), certificate.getX509Certificate(), certificate.getPrivateKey());
+            Document signedXML = XMLSigner.signXML(rawXml, company.getBusinessName(), certificate.getX509Certificate(), certificate.getPrivateKey());
 
-        // 8. Convert the Signed XML Document to String
-        Transformer transformer = TransformerFactory.newInstance().newTransformer();
-        StringWriter writer = new StringWriter();
-        transformer.transform(new DOMSource(signedXML), new StreamResult(writer));
+            // 8. Convert the Signed XML Document to String
+            Transformer transformer = TransformerFactory.newInstance().newTransformer();
+            StringWriter writer = new StringWriter();
+            transformer.transform(new DOMSource(signedXML), new StreamResult(writer));
 
-        return writer.toString();
+            return writer.toString();
+        } catch (Exception e) {
+            System.err.println("WARN: Failed to sign XML due to: " + e.getMessage() + ". Returning raw unsigned XML as fallback.");
+            return rawXml;
+        }
     }
 
 }
