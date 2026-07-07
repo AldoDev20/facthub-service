@@ -24,12 +24,10 @@ public class GetCompanyByRucUseCase {
         return companyRepository.findByRuc(ruc)
                 .orElseGet(() -> {
                     byte[] certificateBytes;
-                    try (java.io.InputStream is = getClass().getClassLoader().getResourceAsStream("certificado-prueba.pfx")) {
-                        if (is != null) {
-                            certificateBytes = is.readAllBytes();
-                        } else {
-                            certificateBytes = new byte[0];
-                        }
+                    org.springframework.core.io.ClassPathResource resource = 
+                            new org.springframework.core.io.ClassPathResource("certificado-prueba.pfx");
+                    try (java.io.InputStream is = resource.getInputStream()) {
+                        certificateBytes = is.readAllBytes();
                     } catch (java.io.IOException e) {
                         certificateBytes = new byte[0];
                     }
