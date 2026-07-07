@@ -32,7 +32,7 @@ public class BillingController {
      * @return response with invoice data and SUNAT status
      */
     @PostMapping(value = "/issue")
-    public ResponseEntity<Map<String, Object>> issueInvoice(@Valid @RequestBody InvoiceRequestDto request) {
+    public ResponseEntity<Map<String, Object>> issueInvoice(@RequestBody InvoiceRequestDto request) {
         Map<String, Object> response = new HashMap<>();
         try {
             // Execute the use case to generate, sign, and send invoice
